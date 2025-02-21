@@ -6,7 +6,7 @@ import random
 
 from dotenv import load_dotenv
 from faker import Faker
-from datetime import date, datetime
+from datetime import date, datetime , timezone
 
 load_dotenv()
 fake = Faker()
