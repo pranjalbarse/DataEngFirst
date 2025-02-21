@@ -39,7 +39,8 @@ def decrypt_data(encrypted_data):
 try:
     input_data = json.loads(input())
     if "encrypted_message" in input_data:
-        decrypted_message = decrypt_data(bytes.fromhex(input_data["encrypted_message"]))
+        encrypted_message_hex=input_data["encrypted_message"]
+        decrypted_message = decrypt_data(bytes.fromhex(input_data["encrypted_message_hex"]))
         if decrypted_message:
             logging.info(f"Decrypted message: {decrypted_message}")
         else:
