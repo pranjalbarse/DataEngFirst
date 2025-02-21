@@ -1,43 +1,20 @@
 import json
-import random
-import uuid
 import logging
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import hashes
-from datetime import datetime
-from faker import Faker
-import sys
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
 
-# Set up logging
+# Setup logging
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger()
 
-# Load public key for encryption
-try:
-    with open("rsa_public.pem", "rb") as public_key_file:
-        public_key = serialization.load_pem_public_key(public_key_file.read())
-    logging.info("Public key loaded successfully.")
-except Exception as e:
-    logging.error(f"Error loading public key: {e}")
-    exit(1)
-
-fake = Faker()
-
-# Sample resorts for generating data
-resorts = [
-    "Vail", "Beaver Creek", "Breckenridge", "Keystone", "Crested Butte", 
-    "Park City", "Heavenly", "Northstar", "Kirkwood", "Whistler Blackcomb"
-]
-
-def get_optional_value(generator_func):
-    """Returns either a generated value or None randomly."""
-    return generator_func() if random.choice([True, False]) else None
-
-# Encrypt data using the public key
-def encrypt_message(message):
+# Encrypt the message using RSA
+def encrypt_message(message, public_key):
     try:
         encrypted_message = public_key.encrypt(
-            message.encode("utf-8"),
+            message.encode(),
             padding.OAEP(
                 mgf=padding.MGF1(algorithm=hashes.SHA256()),
                 algorithm=hashes.SHA256(),
@@ -46,47 +23,55 @@ def encrypt_message(message):
         )
         return encrypted_message.hex()
     except Exception as e:
-        logging.error(f"Error encrypting message: {e}")
+        logger.error(f"Error encrypting message: {e}")
         return None
 
-# Generate a lift ticket (sample data)
-def print_lift_ticket():
-    state = fake.state_abbr()
+# Load public key
+def load_public_key():
+    try:
+        with open("rsa_public.pem", "rb") as key_file:
+            public_key = serialization.load_pem_public_key(
+                key_file.read(),
+                backend=default_backend()
+            )
+        logger.info("Public key loaded successfully.")
+        return public_key
+    except Exception as e:
+        logger.error(f"Error loading public key: {e}")
+        return None
+
+# Generate and encrypt the data
+def generate_data():
+    # Sample data (replace with your actual data generation logic)
     lift_ticket = {
-        'txid': str(uuid.uuid4()),
-        'rfid': hex(random.getrandbits(96)),
-        'resort': fake.random_element(elements=resorts),
-        'purchase_time': datetime.now().isoformat(),
-        'expiration_time': datetime(2023, 6, 1).isoformat(),
-        'days': random.randint(1, 7),
-        'name': fake.name(),
-        'address': get_optional_value(lambda: {
-            'street_address': fake.street_address(),
-            'city': fake.city(),
-            'state': state,
-            'postalcode': fake.zipcode_in_state(state)
-        }),
-        'phone': get_optional_value(fake.phone_number),
-        'email': get_optional_value(fake.email),
-        'emergency_contact': get_optional_value(lambda: {'name': fake.name(), 'phone': fake.phone_number()}),
+        "txid": "eaa511e4-15e7-40fe-a580-d778e6f64478",
+        "rfid": "0x76a4bddb7f9a55baf9bd1135",
+        "resort": "Heavenly Resort",
+        "purchase_time": "2025-02-21T20:34:15.293899",
+        "expiration_time": "2023-06-01T00:00:00",
+        "days": 1,
+        "name": "Jeffery Rogers",
+        "address": {"street_address": "4987 Briggs Tunnel", "city": "Port Robin", "state": "RI", "postalcode": "02833"},
+        "phone": "287.696.7175",
+        "email": "winterskenneth@example.net",
+        "emergency_contact": None
     }
 
-    # Convert dictionary to JSON and encrypt it
+    # Convert data to JSON string
     json_data = json.dumps(lift_ticket, ensure_ascii=False)
-    encrypted_data = encrypt_message(json_data)
+    public_key = load_public_key()
 
-    if encrypted_data:
-        # Print the encrypted message as JSON
-        print(json.dumps({"encrypted_message": encrypted_data}))
-    else:
-        logging.error("Failed to encrypt data.")
+    if public_key:
+        encrypted_message = encrypt_message(json_data, public_key)
+        if encrypted_message:
+            # Return the encrypted message as a JSON object
+            return json.dumps({"encrypted_message": encrypted_message})
+        else:
+            logger.error("Failed to encrypt data.")
+            return None
+    return None
 
 if __name__ == "__main__":
-    args = sys.argv[1:]
-    if args:
-        try:
-            total_count = int(args[0])
-            for _ in range(total_count):
-                print_lift_ticket()
-        except ValueError:
-            logging.error("Error: Invalid argument. Please provide an integer.")
+    encrypted_data = generate_data()
+    if encrypted_data:
+        print(encrypted_data) # This will output the encrypted message
