@@ -44,17 +44,17 @@ def load_public_key():
 def generate_data():
     # Sample data (replace with your actual data generation logic)
     lift_ticket = {
-        "txid": "eaa511e4-15e7-40fe-a580-d778e6f64478",
-        "rfid": "0x76a4bddb7f9a55baf9bd1135",
-        "resort": "Heavenly Resort",
-        "purchase_time": "2025-02-21T20:34:15.293899",
-        "expiration_time": "2023-06-01T00:00:00",
-        "days": 1,
-        "name": "Jeffery Rogers",
-        "address": {"street_address": "4987 Briggs Tunnel", "city": "Port Robin", "state": "RI", "postalcode": "02833"},
-        "phone": "287.696.7175",
-        "email": "winterskenneth@example.net",
-        "emergency_contact": None
+        "TXID": "eaa511e4-15e7-40fe-a580-d778e6f64478",
+        "RFID": "0x76a4bddb7f9a55baf9bd1135",
+        "RESORT": "Heavenly Resort",
+        "PURCHASE_TIME": "2025-02-21T20:34:15.293899",
+        "EXPIRATION_TIME": "2023-06-01T00:00:00",
+        "DAYS": 1,
+        "NAME": "Jeffery Rogers",
+        "ADDRESS": {"street_address": "4987 Briggs Tunnel", "city": "Port Robin", "state": "RI", "postalcode": "02833"},
+        "PHONE": "287.696.7175",
+        "EMAIL": "winterskenneth@example.net",
+        "EMERGENCY_CONTACT": None
     }
 
     # Convert data to JSON string
