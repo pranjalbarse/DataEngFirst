@@ -44,7 +44,7 @@ def print_lift_ticket():
     
     json_data = json.dumps(lift_ticket,ensure_ascii=False)
     encrypted_data = encrypt_message(json_data) # Encrypt before output
-    print(encrypted_data) # Print encrypted output
+    print(json_data) # Print encrypted output
 
 if __name__ == "__main__":
     args = sys.argv[1:]
