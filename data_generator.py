@@ -1,26 +1,34 @@
 import sys
 import rapidjson as json
+import optional_faker as _
 import uuid
 import random
-
 from dotenv import load_dotenv
 from faker import Faker
 from datetime import date, datetime, timezone
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.hashes import SHA256
+
+# Load Public Key for Encryption
+with open("rsa_key.pub", "rb") as key_file:
+    public_key = serialization.load_pem_public_key(key_file.read())
 
 load_dotenv()
 fake = Faker()
+resorts = ["Vail", "Beaver Creek", "Breckenridge", "Keystone", "Crested Butte", "Park City"]
 
-resorts = [
-    "Vail", "Beaver Creek", "Breckenridge", "Keystone", "Crested Butte", "Park City", "Heavenly", "Northstar",
-    "Kirkwood", "Whistler Blackcomb", "Perisher", "Falls Creek", "Hotham", "Stowe", "Mount Snow", "Okemo",
-    "Hunter Mountain", "Mount Sunapee", "Attitash", "Wildcat", "Crotched", "Stevens Pass", "Liberty", "Roundtop", 
-    "Whitetail", "Jack Frost", "Big Boulder", "Alpine Valley", "Boston Mills", "Brandywine", "Mad River",
-    "Hidden Valley", "Snow Creek", "Wilmot", "Afton Alps", "Mt. Brighton", "Paoli Peaks"
-]
-
-def get_optional_value(generator_func):
-    """Returns either a generated value or None randomly."""
-    return generator_func() if random.choice([True, False]) else None
+def encrypt_message(message):
+    """Encrypts a message using the RSA public key"""
+    encrypted = public_key.encrypt(
+        message.encode(),
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=SHA256()),
+            algorithm=SHA256(),
+            label=None
+        )
+    )
+    return encrypted.hex() # Convert bytes to hex for safe transfer
 
 def print_lift_ticket():
     state = fake.state_abbr()
@@ -31,27 +39,16 @@ def print_lift_ticket():
         'purchase_time': datetime.now(timezone.utc).isoformat(),
         'expiration_time': date(2023, 6, 1).isoformat(),
         'days': fake.random_int(min=1, max=7),
-        'name': fake.name(),
-        'address': get_optional_value(lambda: {
-            'street_address': fake.street_address(),
-            'city': fake.city(),
-            'state': state,
-            'postalcode': fake.postcode_in_state(state)
-        }),
-        'phone': get_optional_value(fake.phone_number),
-        'email': get_optional_value(fake.email),
-        'emergency_contact': get_optional_value(lambda: {'name': fake.name(), 'phone': fake.phone_number()}),
+        'name': fake.name()
     }
-
-    d = json.dumps(lift_ticket)
-    sys.stdout.write(d + "\n")  # Ensure it writes a newline at the end
+    
+    json_data = json.dumps(lift_ticket)
+    encrypted_data = encrypt_message(json_data) # Encrypt before output
+    print(encrypted_data) # Print encrypted output
 
 if __name__ == "__main__":
     args = sys.argv[1:]
-    if args:
-        try:
-            total_count = int(args[0])
-            for _ in range(total_count):
-                print_lift_ticket()
-        except ValueError:
-            sys.stderr.write("Error: Invalid argument. Please provide an integer.\n")
+    total_count = int(args[0])
+    for _ in range(total_count):
+        print_lift_ticket()
+    print('')
