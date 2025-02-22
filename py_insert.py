@@ -73,3 +73,5 @@ if __name__ == "__main__":
             logger.error("No encrypted message found in input data.")
     except Exception as e:
         logger.error(f"Error processing input data: {e}")
+conn.commit()
+print("Transaction commited")
